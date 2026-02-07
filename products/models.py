@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 from users.models import CustomUser
@@ -48,19 +49,20 @@ class WishList(models.Model):
     product=models.ForeignKey(Product,on_delete=models.CASCADE,related_name='wishlists')
 
 
+class Cart(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cart')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def str(self):
+        return f"{self.user.username} savati"
 
 
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    @property
+    def total_price(self):
+        price_to_use = self.product.discount_price if self.product.discount_price else self.product.price
+        return self.quantity * price_to_use

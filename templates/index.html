@@ -91,13 +91,20 @@
 						<div class="col-md-3 clearfix">
 							<div class="header-ctn">
 								<!-- Wishlist -->
-								<div>
-									<a href="#">
-										<i class="fa fa-heart-o"></i>
-										<span>Your Wishlist</span>
-										<div class="qty">2</div>
-									</a>
-								</div>
+
+                                    <div>
+                                        <a href="{% url 'wishlist_view' %}"> <i class="fa fa-heart-o"></i>
+                                           <span>Your Wishlist</span>
+                                           <div class="qty" id="wishlist-qty-header">{{ request.user.wishlist.count }}</div>
+                                        </a>
+                                    </div>
+<!--								<div>-->
+<!--									<a href="#">-->
+<!--										<i class="fa fa-heart-o"></i>-->
+<!--										<span>Your Wishlist</span>-->
+<!--										<div class="qty">2</div>-->
+<!--									</a>-->
+<!--								</div>-->
 								<!-- /Wishlist -->
 
 								<!-- Cart -->
@@ -265,17 +272,27 @@
                                                 {% else %}
                                                 <h4 class="product-price">${{ product.price }}</h4>
                                                 {% endif %}
-												<div class="product-rating">
-													<i class="fa fa-star"></i>
-													<i class="fa fa-star"></i>
-													<i class="fa fa-star"></i>
-													<i class="fa fa-star"></i>
-													<i class="fa fa-star"></i>
-												</div>
+<!--												<div class="product-rating">-->
+<!--													<i class="fa fa-star"></i>-->
+<!--													<i class="fa fa-star"></i>-->
+<!--													<i class="fa fa-star"></i>-->
+<!--													<i class="fa fa-star"></i>-->
+<!--													<i class="fa fa-star"></i>-->
+<!--												</div>-->
 												<div class="product-btns">
-													<button class="add-to-wishlist"><i class="fa fa-heart-o"></i><span class="tooltipp">add to wishlist</span></button>
+                                                    <form action="{% url 'toggle_wishlist' product.id %}" method="POST" class="wishlist-form" style="display: inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="add-to-wishlist">
+                                                            <i class="{% if product in request.user.wishlist.all %}fa fa-heart text-danger{% else %}fa fa-heart-o{% endif %}"></i>
+                                                            <span class="tooltipp">
+                                                                {% if product in request.user.wishlist.all %}O'chirish{% else %}Saralanganlarga qo'shish{% endif %}
+                                                            </span>
+                                                        </button>
+                                                    </form>
+<!--													<button class="add-to-wishlist"><i class="fa fa-heart-o"></i><span class="tooltipp">add to wishlist</span></button>-->
 													<button class="add-to-compare"><i class="fa fa-exchange"></i><span class="tooltipp">add to compare</span></button>
-													<button class="quick-view"><i class="fa fa-eye"></i><span class="tooltipp">quick view</span></button>
+                                                    <button class="quick-view"><a href="{% url 'product_detail' product.id %}"><i class="fa fa-eye"></i><span class="tooltipp">quick view</span></a></button>
+<!--													<button class="quick-view"><i class="fa fa-eye"></i><span class="tooltipp">quick view</span></button>-->
 												</div>
 											</div>
 											<div class="add-to-cart">
@@ -862,6 +879,40 @@
 		<script src="{% static 'js/nouislider.min.js' %}"></script>
 		<script src="{% static 'js/jquery.zoom.min.js' %}"></script>
 		<script src="{% static 'js/main.js' %}"></script>
+
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+        $(document).on('submit', '.ajax-wishlist-form', function(e) {
+            e.preventDefault(); // Sahifa yangilanishini to'xtatadi
+
+            var form = $(this);
+            var url = form.attr('action');
+            var heartIcon = form.find('i');
+            var headerQty = $('#wishlist-qty-header'); // Tepadagi raqam
+
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: form.serialize(),
+                success: function(response) {
+                    // 1. Ikonka ko'rinishini o'zgartirish
+                    heartIcon.toggleClass('fa-heart-o fa-heart text-danger');
+
+                    // 2. Tepadagi raqamni yangilash
+                    var currentCount = parseInt(headerQty.text());
+                    if (heartIcon.hasClass('fa-heart')) {
+                        headerQty.text(currentCount + 1); // Qo'shildi
+                    } else {
+                        headerQty.text(currentCount - 1); // O'chirildi
+                    }
+                },
+                error: function() {
+                    alert("Tizimga kirmagansiz yoki xatolik yuz berdi!");
+                }
+            });
+        });
+        </script>
 
 	</body>
 </html>
